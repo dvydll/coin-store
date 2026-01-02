@@ -1,0 +1,23 @@
+{
+  "name": "coin-store",
+  "type": "module",
+  "scripts": {
+    "build:css": "bunx @tailwindcss/cli -i ./src/app/style.css -o ./public/style.css --minify --watch",
+    "dev": "bun run build:css & wrangler dev --env development",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.11.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.10",
+    "@cloudflare/vite-plugin": "^1.2.3",
+    "@cloudflare/workers-types": "^4.20251231.0",
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/postcss": "^4.1.18",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "wrangler": "^4.17.0"
+  }
+}

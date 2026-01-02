@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+	color-scheme: dark light;
+	font-family:
+		system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+		Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+
+/* Reset básico para que html y body ocupen todo el viewport */
+html,
+body {
+	height: 100%;
+	margin: 0;
+}
+
+/* Contenedor principal */
+body {
+	display: flex;
+	flex-direction: column; /* Header arriba, main en medio, footer abajo */
+	min-height: 100dvh; /* Ocupa toda la altura de la pantalla */
+}
+
+/* Header fijo en la parte superior */
+header {
+	flex: 0 0 auto; /* No crece ni encoge */
+	padding: 1rem;
+}
+
+/* Main se expande para rellenar el espacio disponible */
+main {
+	view-transition-name: page;
+	flex: 1 0 auto; /* Crece para ocupar todo el espacio libre */
+	padding: 1rem;
+	overflow: auto; /* Si el contenido es grande, scroll solo en main */
+}
+
+/* Footer fijo abajo */
+footer {
+	flex: 0 0 auto;
+	padding: 1rem;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: new feature */
+::view-transition-old(page) {
+	animation: fade 0.2s linear forwards;
+}
+
+/* biome-ignore lint/correctness/noUnknownTypeSelector: new feature */
+::view-transition-new(page) {
+	animation: fade 0.3s linear reverse;
+}
+
+@keyframes fade {
+	0% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+
+	100% {
+		opacity: 0;
+		transform: translateY(50px);
+	}
+}
