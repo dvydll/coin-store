@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coin-store",
+  "compatibility_date": "2025-08-03",
+  "main": "./src/index.tsx",
+  "vars": {
+    "ENVIRONMENT": "development"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "coin-store-db",
+      "database_id": "0d71dd87-e01f-4d6d-ba83-4dda86e67fc1",
+      "remote": true
+    }
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}

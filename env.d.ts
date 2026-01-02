@@ -41,18 +41,7 @@ interface Variables {
 	user: DiscordUser | null;
 }
 
-interface Bindings {
-	DB: D1Database;
-	DISCORD_CLIENT_ID: string;
-	DISCORD_CLIENT_SECRET: string;
-	DISCORD_REDIRECT_URI: string;
-	JWT_SECRET: string;
-	STRIPE_SECRET_KEY: string;
-	STRIPE_WEBHOOK_SECRET: string;
-	ASSETS: Fetcher;
-}
-
 declare interface Env {
 	Variables: Variables;
-	Bindings: Bindings;
+	Bindings: CloudflareBindings;
 }

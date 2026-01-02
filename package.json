@@ -3,7 +3,8 @@
   "type": "module",
   "scripts": {
     "build:css": "bunx @tailwindcss/cli -i ./src/app/style.css -o ./public/style.css --minify --watch",
-    "dev": "bun run build:css & wrangler dev --env development",
+    "dev": "bun run build:css & wrangler dev",
+    "deploy": "bunx wrangler deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
