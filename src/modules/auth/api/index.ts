@@ -1,12 +1,8 @@
 import { Hono } from "hono";
+import { hc } from "hono/client";
 import { deleteCookie, setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-
-import {
-	getDiscordAvatarUrl,
-	getDiscordToken,
-	getDiscordUser,
-} from "../../lib/discord";
+import { getDiscordToken, getDiscordUser } from "../lib/discord";
 
 const SESSION_COOKIE_OPTIONS = {
 	httpOnly: true,
@@ -40,23 +36,25 @@ const authCtrl = new Hono<Env>()
 			tokenData.access_token,
 		);
 
-		// Guardar/actualizar usuario en D1
+		// TODO: Guardar/actualizar usuario en D1
 		// await c.env.DB.prepare(`
-		//   INSERT INTO users (id, discord_id, username)
-		//   VALUES (?, ?, ?)
+		//   INSERT INTO users (id, discord_id, username, email)
+		//   VALUES (?, ?, ?, ?)
 		//   ON CONFLICT(discord_id) DO UPDATE SET username = excluded.username
 		// `)
-		// 	.bind(crypto.randomUUID(), discordUser.id, discordUser.username)
+		// 	.bind(
+		// 		crypto.randomUUID(),
+		// 		discordUser.id,
+		// 		discordUser.username,
+		// 		discordUser.email,
+		// 	)
 		// 	.run();
 
 		// Crear JWT
 		const jwt = await sign(
 			{
 				sub: discordUser.id,
-				discord_user: {
-					...discordUser,
-					avatar_url: getDiscordAvatarUrl(discordUser.id, discordUser.avatar),
-				},
+				discord_user: discordUser,
 				exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
 			},
 			c.env.JWT_SECRET,
@@ -71,3 +69,4 @@ const authCtrl = new Hono<Env>()
 	});
 
 export default authCtrl;
+export const authClient = hc<typeof authCtrl>("/api/auth");

@@ -17,7 +17,6 @@ declare interface DiscordUser {
 	id: string;
 	username: string;
 	avatar: string;
-	avatar_url: string;
 	discriminator: string;
 	public_flags: number;
 	flags: number;
@@ -35,6 +34,14 @@ declare interface DiscordUser {
 	premium_type: number;
 	email: string;
 	verified: boolean;
+}
+
+declare interface Product {
+	id: string | number;
+	amount: number;
+	currency: "eur" | "usd";
+	name: string;
+	description: string;
 }
 
 interface Variables {

@@ -13,6 +13,7 @@ export const Layout = ({ title, user, children }: Props) =>
     <head>
       <link href="/style.css" rel="stylesheet" />
       <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+      <script type="module" src="/avatar-script.js" />
     </head>
     <body>
       <Header title={title} user={user} />

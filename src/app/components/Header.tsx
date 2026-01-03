@@ -1,4 +1,6 @@
+import DiscordAvatar from "../../modules/auth/app/DiscordAvatar";
 import { ROUTES } from "../../routes";
+import LinkButton from "./LinkButton";
 
 interface Props {
   title?: string;
@@ -16,14 +18,9 @@ export const Header = ({ title = 'MySite', user }: Props) => {
   return <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
     <h1 className="text-3xl font-bold">{title}</h1>
     <nav style={{ display: 'flex', flexFlow: 'row nowrap', gap: '1rem' }}>
-      {links.map(link => <a href={link.path}>{link.label}</a>)}
-      {user?.email === 'david.llopislaguna@gmail.com' && <a href={ROUTES.admin}>Configuración</a>}
+      {links.map(link => <LinkButton href={link.path}>{link.label}</LinkButton>)}
+      {user?.email === 'david.llopislaguna@gmail.com' && <LinkButton href={ROUTES.admin}>Configuración</LinkButton>}
+      {user ? <DiscordAvatar user={user} /> : <LinkButton href={ROUTES.login}>Iniciar sesión</LinkButton>}
     </nav>
-    {user && <img
-      src={user.avatar_url}
-      alt={user.username}
-      class="mx-auto block h-24 rounded-full sm:mx-0 sm:shrink-0"
-    />}
-    {user ? <a href={ROUTES.logout}>Cerrar sesión</a> : <a href={ROUTES.login}>Iniciar sesión</a>}
   </header>
 }

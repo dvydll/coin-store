@@ -24,12 +24,16 @@ export async function getDiscordUser<T>(accessToken: string) {
 	return res.json<T>();
 }
 
-export function getDiscordAvatarUrl(discordId: string, avatar?: string) {
+export function getDiscordAvatarUrl(
+	discordId: string,
+	avatar?: string,
+	size = 128,
+) {
 	if (avatar) {
 		const ext = avatar.startsWith("a_") ? "gif" : "png";
-		return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${ext}`;
+		return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${ext}?size=${size}`;
 	}
 
 	const index = Number(BigInt(discordId) % 5n);
-	return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+	return `https://cdn.discordapp.com/embed/avatars/${index}.png?size=${size}`;
 }
