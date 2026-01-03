@@ -1,7 +1,7 @@
 import Card from "../components/Card";
 
 interface Props {
-  products: Product[];
+  products: ProductDb[];
 }
 
 export const Store = ({ products }: Props) => {

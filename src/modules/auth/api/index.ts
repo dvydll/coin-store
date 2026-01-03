@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { hc } from "hono/client";
-import { deleteCookie, setCookie } from "hono/cookie";
-import { sign } from "hono/jwt";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { sign, verify } from "hono/jwt";
 import { getDiscordToken, getDiscordUser } from "../lib/discord";
 
 const SESSION_COOKIE_OPTIONS = {
@@ -10,6 +10,7 @@ const SESSION_COOKIE_OPTIONS = {
 	sameSite: "Lax",
 	path: "/",
 } as const;
+const ONE_WEEK_IN_SECONDS = 60 * 60 * 24 * 7;
 
 const authCtrl = new Hono<Env>()
 	.get("/login", (c) => {
@@ -23,8 +24,22 @@ const authCtrl = new Hono<Env>()
 			`https://discord.com/api/oauth2/authorize?${params.toString()}`,
 		);
 	})
-	.get("/logout", (c) => {
-		deleteCookie(c, "auth", SESSION_COOKIE_OPTIONS);
+	.get("/logout", async (c) => {
+		const token = getCookie(c, "session");
+		if (!token) return c.redirect("/");
+		try {
+			const { session_id } = await verify(token, c.env.JWT_SECRET);
+			// Revocar sesión en D1
+			await c.env.DB.prepare(`
+          UPDATE sessions SET revoked_at = ?
+          WHERE id = ?
+        `)
+				.bind(Date.now(), session_id)
+				.run();
+			deleteCookie(c, "session", SESSION_COOKIE_OPTIONS);
+		} catch (error) {
+			console.error(error);
+		}
 		return c.redirect("/");
 	})
 	.get("/discord/callback", async (c) => {
@@ -32,37 +47,51 @@ const authCtrl = new Hono<Env>()
 		if (!code) return c.redirect("/login");
 
 		const tokenData = await getDiscordToken<DiscordToken>(c, code);
-		const discordUser = await getDiscordUser<DiscordUser>(
-			tokenData.access_token,
-		);
+		const {
+			id: discordId,
+			email,
+			...discordUserData
+		} = await getDiscordUser<DiscordUser>(tokenData.access_token);
 
-		// TODO: Guardar/actualizar usuario en D1
-		// await c.env.DB.prepare(`
-		//   INSERT INTO users (id, discord_id, username, email)
-		//   VALUES (?, ?, ?, ?)
-		//   ON CONFLICT(discord_id) DO UPDATE SET username = excluded.username
-		// `)
-		// 	.bind(
-		// 		crypto.randomUUID(),
-		// 		discordUser.id,
-		// 		discordUser.username,
-		// 		discordUser.email,
-		// 	)
-		// 	.run();
+		// Guardar/actualizar usuario en D1
+		const existingUser = await c.env.DB.prepare(
+			"SELECT id FROM active_users WHERE discord_id = ?",
+		)
+			.bind(discordId)
+			.first<UserDb>();
+		const userId = existingUser?.id ?? crypto.randomUUID();
+		const discordMeta = JSON.stringify(discordUserData);
+		await c.env.DB.prepare(`
+		  INSERT INTO users (id, discord_id, email, discord_meta)
+		  VALUES (?, ?, ?, ?)
+		  ON CONFLICT(discord_id) DO UPDATE SET discord_meta = ?
+		`)
+			.bind(userId, discordId, email, discordMeta, discordMeta)
+			.run();
 
-		// Crear JWT
+		// Guardar sesión en D1
+		const sessionId = crypto.randomUUID();
+		const expirationDateUnUnix =
+			Math.floor(Date.now() / 1000) + ONE_WEEK_IN_SECONDS;
+		await c.env.DB.prepare(`
+          INSERT INTO sessions (id, user_id, expires_at)
+          VALUES (?, ?, ?)
+        `)
+			.bind(sessionId, userId, expirationDateUnUnix)
+			.run();
+
 		const jwt = await sign(
 			{
-				sub: discordUser.id,
-				discord_user: discordUser,
-				exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
+				sub: userId,
+				session_id: sessionId,
+				exp: expirationDateUnUnix,
 			},
 			c.env.JWT_SECRET,
 		);
 
-		setCookie(c, "auth", jwt, {
+		setCookie(c, "session", jwt, {
 			...SESSION_COOKIE_OPTIONS,
-			maxAge: 60 * 60 * 24 * 7,
+			maxAge: ONE_WEEK_IN_SECONDS,
 		});
 
 		return c.redirect("/");

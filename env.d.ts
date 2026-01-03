@@ -36,16 +36,36 @@ declare interface DiscordUser {
 	verified: boolean;
 }
 
-declare interface Product {
-	id: string | number;
-	amount: number;
+declare interface UserDb<TMetadata = string> {
+	id: string;
+	discord_id: string | number;
+	email: string | null;
+	discord_meta: TMetadata | null;
+	server_coins: number;
+	created_at: number;
+	updated_at: number;
+	deleted_at: number | null;
+}
+
+declare interface ProductDb {
+	id: string;
+	price_cents: number;
 	currency: "eur" | "usd";
-	name: string;
-	description: string;
+	product_name: string;
+	product_description: string;
+}
+
+declare interface Session<TMetadata = string> {
+	id: string;
+	user_id: string;
+	expires_at: number;
+	revoked_at: number | null;
+	metadata: TMetadata;
+	created_at: number | null;
 }
 
 interface Variables {
-	user: DiscordUser | null;
+	user: DiscordUser | UserDb["id"] | null;
 }
 
 declare interface Env {

@@ -1,10 +1,10 @@
 import { ROUTES } from "../../routes";
 
-interface Props<Item extends Product> {
+interface Props<Item extends ProductDb> {
   item: Item;
 }
 
-export default function Card<Item extends Product>({ item }: Props<Item>) {
+export default function Card<Item extends ProductDb>({ item }: Props<Item>) {
   return <article class="flex flex-col bg-white rounded-3xl hover:scale-105 transition-transform">
     <div class="px-6 py-8 sm:p-10 sm:pb-6">
       <div class="grid items-center justify-center w-full grid-cols-1 text-left">
@@ -12,14 +12,14 @@ export default function Card<Item extends Product>({ item }: Props<Item>) {
           <h2
             class="text-lg font-medium tracking-tighter text-gray-600 lg:text-3xl"
           >
-            {item.name}
+            {item.product_name}
           </h2>
-          <p class="mt-2 text-sm text-gray-500">{item.description}</p>
+          <p class="mt-2 text-sm text-gray-500">{item.product_description}</p>
         </div>
         <div class="mt-6">
           <p>
             <span class="text-5xl font-light tracking-tight text-black">
-              {item.currency === 'eur' ? `${item.amount}€` : `$${item.amount}`}
+              {item.currency === 'eur' ? `${item.price_cents}€` : `$${item.price_cents}`}
             </span>
             <span class="text-base font-medium text-gray-500"> /mo </span>
           </p>

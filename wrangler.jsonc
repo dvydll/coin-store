@@ -1,22 +1,21 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "coin-store",
-  "compatibility_date": "2025-08-03",
-  "main": "./src/index.tsx",
-  "vars": {
-    "ENVIRONMENT": "development",
-    "APP_URL": "https://coin-store.david-llopislaguna.workers.dev"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "coin-store-db",
-      "database_id": "0d71dd87-e01f-4d6d-ba83-4dda86e67fc1",
-      "remote": true
-    }
-  ],
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "coin-store",
+	"compatibility_date": "2025-08-03",
+	"main": "./src/index.tsx",
+	"vars": {
+		"ENVIRONMENT": "development",
+		"APP_URL": "https://coin-store.david-llopislaguna.workers.dev"
+	},
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "coin-store-db",
+			"database_id": "65846510-1e8c-4ea5-abd4-a1532d62fc56"
+		}
+	]
 }

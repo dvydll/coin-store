@@ -21,7 +21,7 @@ export const paymentsApi = new Hono<Env>().post(
 			"SELECT * from products WHERE id = ?",
 		)
 			.bind(id)
-			.run<Product>();
+			.run<ProductDb>();
 
 		if (!d1Result.success)
 			return c.redirect(`${c.env.APP_URL}${ROUTES.cancelPayment}`);
@@ -36,10 +36,10 @@ export const paymentsApi = new Hono<Env>().post(
 					price_data: {
 						currency: product.currency,
 						product_data: {
-							name: product.name,
-							description: product.description,
+							name: product.product_name,
+							description: product.product_description,
 						},
-						unit_amount: product.amount * 100, // no admite decimales, precio en centimos
+						unit_amount: product.price_cents,
 					},
 					quantity: 1,
 				},
