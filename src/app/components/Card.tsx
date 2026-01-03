@@ -19,7 +19,7 @@ export default function Card<Item extends ProductDb>({ item }: Props<Item>) {
         <div class="mt-6">
           <p>
             <span class="text-5xl font-light tracking-tight text-black">
-              {item.currency === 'eur' ? `${item.price_cents}€` : `$${item.price_cents}`}
+              {item.currency === 'eur' ? `${(item.price_cents / 100).toFixed(2)}€` : `$${(item.price_cents / 100).toFixed(2)}`}
             </span>
             <span class="text-base font-medium text-gray-500"> /mo </span>
           </p>

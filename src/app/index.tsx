@@ -20,7 +20,7 @@ const app = new Hono<Env>()
   .get(ROUTES.home, (c) => c.render(<Home />))
   .get(ROUTES.store, async (c) => {
     const d1Result = await c.env.DB.prepare(
-      "SELECT * from products",
+      "SELECT * from active_products",
     )
       .run<ProductDb>();
     return c.render(<Store products={d1Result.results} />)
