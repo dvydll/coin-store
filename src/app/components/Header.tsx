@@ -16,7 +16,9 @@ const links = [
 
 export const Header = ({ title = 'MySite', user }: Props) => {
   return <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-    <h1 className="text-3xl font-bold">{title}</h1>
+    <a href={ROUTES.home}>
+      <h1 className="text-3xl font-bold">{title}</h1>
+    </a>
     <nav style={{ display: 'flex', flexFlow: 'row nowrap', gap: '1rem' }}>
       {links.map(link => <LinkButton href={link.path}>{link.label}</LinkButton>)}
       {user?.email === 'david.llopislaguna@gmail.com' && <LinkButton href={ROUTES.admin}>Configuración</LinkButton>}

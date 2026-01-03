@@ -5,7 +5,7 @@ interface Props<Item extends Product> {
 }
 
 export default function Card<Item extends Product>({ item }: Props<Item>) {
-  return <article class="flex flex-col bg-white rounded-3xl">
+  return <article class="flex flex-col bg-white rounded-3xl hover:scale-105 transition-transform">
     <div class="px-6 py-8 sm:p-10 sm:pb-6">
       <div class="grid items-center justify-center w-full grid-cols-1 text-left">
         <div>
@@ -32,7 +32,7 @@ export default function Card<Item extends Product>({ item }: Props<Item>) {
         <button
           type="submit"
           aria-describedby="tier-company"
-          class="flex items-center justify-center w-full px-6 py-2.5 text-center text-white duration-200 bg-black border-2 border-black rounded-full nline-flex hover:bg-transparent hover:border-black hover:text-black focus:outline-none focus-visible:outline-black text-sm focus-visible:ring-black"
+          class="flex items-center justify-center w-full px-6 py-2.5 text-center text-gray-50 duration-200 bg-gray-900 border-2 border-gray-950 rounded-full nline-flex hover:bg-transparent hover:border-b-gray-900 hover:text-gray-950 focus:outline-none focus-visible:outline-gray-900 text-sm focus-visible:ring-gray-950 cursor-pointer"
         >
           Comprar
         </button>
