@@ -89,14 +89,23 @@ export const paymentsApi = new Hono<Env>()
 
 			// Registrar compra en D1
 			try {
-				const { sql } = getDb(c);
+				const { sql, first } = getDb(c);
 				await sql`
-          INSERT INTO purchases (id, user_id, pack_id, payment_session_id, amount_cents, currency)
-          VALUES (${crypto.randomUUID()}, ${userId}, ${packId}, ${session.id}, ${amountCents}, ${currency})
+        INSERT INTO purchases (id, user_id, pack_id, payment_session_id, amount_cents, currency)
+        VALUES (${crypto.randomUUID()}, ${userId}, ${packId}, ${session.id}, ${amountCents}, ${currency})
         `;
 
-				// Actualizar server_coins del usuario
-				await sql`UPDATE users SET server_coins = server_coins + ${0} WHERE id = ${userId}`;
+				// TODO: migrate db for add column with coins integer
+				const p = await first<{
+					product_name: string;
+				}>`SELECT product_name FROM products WHERE id = ${packId}`;
+
+				if (p) {
+					const packValue = Number(p.product_name.replace(" créditos", ""));
+
+					// Actualizar server_coins del usuario
+					await sql`UPDATE users SET server_coins = server_coins + ${packValue} WHERE id = ${userId}`;
+				}
 			} catch (err) {
 				console.error(err);
 			}
