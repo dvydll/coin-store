@@ -81,6 +81,7 @@ export const paymentsApi = new Hono<Env>()
 			const packId = session.metadata?.packId;
 			const amountCents = session.amount_total;
 			const currency = session.currency;
+			const status = session.status;
 
 			if (!userId || !packId) {
 				console.info(`Unhandled event type: ${event.type}`);
@@ -91,8 +92,8 @@ export const paymentsApi = new Hono<Env>()
 			try {
 				const { sql, first } = getDb(c);
 				await sql`
-        INSERT INTO purchases (id, user_id, pack_id, payment_session_id, amount_cents, currency)
-        VALUES (${crypto.randomUUID()}, ${userId}, ${packId}, ${session.id}, ${amountCents}, ${currency})
+        INSERT INTO purchases (id, user_id, product_id, payment_session_id, amount_cents, currency, payment_status)
+        VALUES (${crypto.randomUUID()}, ${userId}, ${packId}, ${session.id}, ${amountCents}, ${currency}, ${status})
         `;
 
 				// TODO: migrate db for add column with coins integer
