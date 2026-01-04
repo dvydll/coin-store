@@ -2,6 +2,7 @@ import type { Context, MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
 import { ROUTES } from "../routes";
+import { getDb } from "../services/db-repository";
 
 interface SessionWithUser<TMetadata = string> {
 	id: string;
@@ -35,15 +36,14 @@ async function getUserFromCookie(c: Context<Env>) {
 		const { session_id } = await verify(token, c.env.JWT_SECRET);
 
 		// Buscar la sesión en la DB (revocada o expirada)
-		const session = await c.env.DB.prepare(`
+		const { first } = getDb(c);
+		const session = await first<SessionWithUser>`
       SELECT s.id, s.user_id, s.expires_at, s.revoked_at, u.id AS uid,
              u.discord_id, u.email, u.discord_meta, u.server_coins
       FROM sessions s
       JOIN active_users u ON u.id = s.user_id
-      WHERE s.id = ?
-    `)
-			.bind(session_id)
-			.first<SessionWithUser>();
+      WHERE s.id = ${session_id}
+    `;
 
 		if (!session) throw new Error("Session not found");
 		else if (session.revoked_at) throw new Error("Session revoked");
@@ -51,7 +51,6 @@ async function getUserFromCookie(c: Context<Env>) {
 			throw new Error("Session expired");
 
 		// Inyectar user en context
-		console.log({ session });
 		if (session.discord_meta)
 			c.set("user", {
 				id: session.discord_id,

@@ -1,17 +1,17 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type Stripe from "stripe";
 import { z } from "zod";
 import { ROUTES } from "../../../routes";
+import { getDb } from "../../../services/db-repository";
 import { getStripe } from "../lib/stripe";
 
 const schema = z.object({
 	id: z.uuidv4(),
 });
 
-export const paymentsApi = new Hono<Env>().post(
-	"/create",
-	zValidator("form", schema),
-	async (c) => {
+export const paymentsApi = new Hono<Env>()
+	.post("/create", zValidator("form", schema), async (c) => {
 		const { id } = c.req.valid("form");
 
 		const user = c.get("user");
@@ -47,7 +47,7 @@ export const paymentsApi = new Hono<Env>().post(
 			success_url: `${c.env.APP_URL}${ROUTES.successPayment}?session_id={CHECKOUT_SESSION_ID}`,
 			cancel_url: `${c.env.APP_URL}${ROUTES.cancelPayment}`,
 			metadata: {
-				userId: user.id,
+				userId: typeof user === "string" ? user : user.id,
 				packId: product.id,
 			},
 		});
@@ -55,6 +55,53 @@ export const paymentsApi = new Hono<Env>().post(
 		return session.url
 			? c.redirect(session.url, 303)
 			: c.redirect(`${c.env.APP_URL}${ROUTES.cancelPayment}`);
-	},
-);
+	})
+	.post("/stripe/callback", async (c) => {
+		const stripe = getStripe(c.env);
+
+		// Raw body necesario para verificar la firma
+		let event: Stripe.Event;
+		try {
+			const sig = c.req.header("stripe-signature");
+			const rawBody = await c.req.arrayBuffer();
+			event = stripe.webhooks.constructEvent(
+				rawBody,
+				sig,
+				c.env.STRIPE_WEBHOOK_SECRET,
+			);
+		} catch (err) {
+			console.error("⚠️ Webhook signature failed", err);
+			return c.text("Webhook Error", 400);
+		}
+
+		if (event.type === "checkout.session.completed") {
+			const session = event.data.object as Stripe.Checkout.Session;
+
+			const userId = session.metadata?.userId;
+			const packId = session.metadata?.packId;
+			const amountCents = session.amount_total;
+			const currency = session.currency;
+
+			if (!userId || !packId) {
+				console.info(`Unhandled event type: ${event.type}`);
+				return c.text("Received", 200);
+			}
+
+			// Registrar compra en D1
+			try {
+				const { sql } = getDb(c);
+				await sql`
+          INSERT INTO purchases (id, user_id, pack_id, payment_session_id, amount_cents, currency)
+          VALUES (${crypto.randomUUID()}, ${userId}, ${packId}, ${session.id}, ${amountCents}, ${currency})
+        `;
+
+				// Actualizar server_coins del usuario
+				await sql`UPDATE users SET server_coins = server_coins + ${0} WHERE id = ${userId}`;
+			} catch (err) {
+				console.error(err);
+			}
+		}
+
+		return c.text("Received", 200);
+	});
 export default paymentsApi;

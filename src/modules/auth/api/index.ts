@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { hc } from "hono/client";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { sign, verify } from "hono/jwt";
+import { getDb } from "../../../services/db-repository";
 import { getDiscordToken, getDiscordUser } from "../lib/discord";
 
 const SESSION_COOKIE_OPTIONS = {
@@ -54,31 +55,36 @@ const authCtrl = new Hono<Env>()
 		} = await getDiscordUser<DiscordUser>(tokenData.access_token);
 
 		// Guardar/actualizar usuario en D1
-		const existingUser = await c.env.DB.prepare(
-			"SELECT id FROM active_users WHERE discord_id = ?",
-		)
-			.bind(discordId)
-			.first<UserDb>();
+		const { sql, first } = getDb(c);
+		const existingUser =
+			await first<UserDb>`SELECT id FROM active_users WHERE discord_id = ${discordId}`;
+
 		const userId = existingUser?.id ?? crypto.randomUUID();
 		const discordMeta = JSON.stringify(discordUserData);
-		await c.env.DB.prepare(`
+		await sql`
 		  INSERT INTO users (id, discord_id, email, discord_meta)
-		  VALUES (?, ?, ?, ?)
-		  ON CONFLICT(discord_id) DO UPDATE SET discord_meta = ?
-		`)
-			.bind(userId, discordId, email, discordMeta, discordMeta)
-			.run();
+		  VALUES (${userId}, ${discordId}, ${email}, ${discordMeta})
+		  ON CONFLICT(discord_id) DO UPDATE SET discord_meta = ${discordMeta}
+		`;
 
 		// Guardar sesión en D1
 		const sessionId = crypto.randomUUID();
 		const expirationDateUnUnix =
 			Math.floor(Date.now() / 1000) + ONE_WEEK_IN_SECONDS;
-		await c.env.DB.prepare(`
-          INSERT INTO sessions (id, user_id, expires_at)
-          VALUES (?, ?, ?)
-        `)
-			.bind(sessionId, userId, expirationDateUnUnix)
-			.run();
+		const { cf } = c.req.raw;
+		// Recovery client request data (IP, browser...)
+		const metadata = JSON.stringify({
+			ip: c.req.header("cf-connecting-ip"),
+			ua: c.req.header("user-agent"),
+			country: cf?.country,
+			city: cf?.city,
+			colo: cf?.colo,
+			asn: cf?.asn,
+		});
+		await sql`
+      INSERT INTO sessions (id, user_id, expires_at, metadata)
+      VALUES (${sessionId}, ${userId}, ${expirationDateUnUnix}, ${metadata})
+    `;
 
 		const jwt = await sign(
 			{
